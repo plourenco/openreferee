@@ -1,0 +1,7 @@
+werkzeug
+flask
+flask-sqlalchemy
+requests
+sqlalchemy
+webargs
+psycopg2
