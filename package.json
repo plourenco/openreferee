@@ -5,7 +5,11 @@
     "isort": "isort --recursive setup.py openreferee_server/",
     "black": "black setup.py openreferee_server/",
     "pycodestyle": "pycodestyle openreferee_server/",
-    "flake8": "flake8 openreferee_server/"
+    "flake8": "flake8 openreferee_server/",
+    "api-spec": "FLASK_APP=openreferee_server flask openapi > specs/spec.yaml",
+    "api-spec-test": "FLASK_APP=openreferee_server flask openapi --json --test -h localhost -p 12345 > specs/spec.test.json",
+    "api-docs": "npm run api-spec && speccy serve specs/spec.yaml",
+    "swagger-ui": "npm run api-spec-test && docker run -p 5001:8080 -e SWAGGER_JSON=/specs/spec.test.json -v $(pwd)/specs:/specs swaggerapi/swagger-ui"
   },
   "lint-staged": {
     "*.py": [
@@ -20,7 +24,10 @@
   },
   "devDependencies": {
     "husky": "^4.2",
-    "lint-staged": "^10.2"
+    "lint-staged": "^10.2",
+    "redoc": "^2.0.0-rc.30"
   },
-  "dependencies": {}
+  "dependencies": {
+    "speccy": "^0.11.0"
+  }
 }

@@ -1,4 +1,5 @@
 import os
+import re
 
 from setuptools import find_packages, setup
 
@@ -18,9 +19,12 @@ def get_requirements():
     )
 
 
+with open("openreferee_server/__init__.py", encoding="utf8") as f:
+    version = re.search(r'__version__ = "(.*?)"', f.read()).group(1)
+
 setup(
     name="openreferee-reference-server",
-    version="0.1-dev",
+    version=version,
     url="https://github.com/indico/openreferee",
     license="MIT",
     author="Indico Team",

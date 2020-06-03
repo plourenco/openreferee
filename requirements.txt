@@ -1,7 +1,10 @@
 werkzeug
 flask
 flask-sqlalchemy
+flask-cors
 requests
 sqlalchemy
 webargs
 psycopg2
+apispec[yaml]
+apispec-webframeworks

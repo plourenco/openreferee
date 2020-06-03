@@ -1,15 +1,13 @@
-# run it like this:
-# FLASK_ENV=development FLASK_DEBUG=1 FLASK_APP=testsvc.py flask run -p 12345
-
 from functools import wraps
 
+import click
+from flask import json as _json
 from flask import jsonify, request
 from sqlalchemy.exc import IntegrityError
-from webargs import fields
 from webargs.flaskparser import use_kwargs
 from werkzeug.exceptions import Conflict, NotFound, Unauthorized
 
-from .app import app
+from .app import app, register_spec
 from .db import db
 from .defaults import DEFAULT_EDITABLES, SERVICE_INFO
 from .models import Event
@@ -19,6 +17,7 @@ from .operations import (
     setup_file_types,
     setup_requests_session,
 )
+from .schemas import EventInfoSchema, EventSchema
 
 
 def require_event_token(fn):
@@ -43,40 +42,46 @@ def require_event_token(fn):
 
 @app.route("/info")
 def info():
+    """Get service info
+    ---
+    get:
+      description: Get service info
+      operationId: getServiceInfo
+      tags: ["service", "information"]
+      responses:
+        200:
+          description: Service Info
+          content:
+            application/json:
+              schema: ServiceInfoSchema
+
+    """
     return jsonify(SERVICE_INFO)
 
 
 @app.route("/event/<identifier>", methods=("PUT",))
-@use_kwargs(
-    {
-        "title": fields.String(required=True),
-        "url": fields.URL(schemes={"http", "https"}, required=True),
-        "token": fields.String(required=True),
-        "config_endpoints": fields.Nested(
-            {
-                "tags": fields.Nested(
-                    {
-                        "create": fields.String(required=True),
-                        "list": fields.String(required=True),
-                    }
-                ),
-                "editable_types": fields.String(required=True),
-                "file_types": fields.Dict(
-                    keys=fields.String(),
-                    values=fields.Nested(
-                        {
-                            "create": fields.String(required=True),
-                            "list": fields.String(required=True),
-                        }
-                    ),
-                    required=True,
-                ),
-            },
-            required=True,
-        ),
-    }
-)
+@use_kwargs(EventSchema, location="json")
 def create_event(identifier, title, url, token, config_endpoints):
+    """Create an Event.
+    ---
+    put:
+      description: Create an Event
+      operationId: createEvent
+      tags: ["event", "create"]
+      requestBody:
+        content:
+          application/json:
+            schema: EventSchema
+      parameters:
+        - in: path
+          schema: IdentifierParameter
+      responses:
+        201:
+          description: Event Created
+          content:
+            application/json:
+              schema: SuccessSchema
+    """
     event = Event(
         identifier=identifier,
         title=title,
@@ -103,22 +108,80 @@ def create_event(identifier, title, url, token, config_endpoints):
     setup_file_types(session, event)
 
     db.session.commit()
-    return "", 201
+    return jsonify({"success": True}), 201
 
 
 @app.route("/event/<identifier>", methods=("DELETE",))
 @require_event_token
 def remove_event(event):
+    """Remove an Event.
+    ---
+    delete:
+      description: Remove an Event
+      operationId: removeEvent
+      tags: ["event", "remove"]
+      security:
+        - bearer_token: []
+      parameters:
+        - in: path
+          schema: IdentifierParameter
+      responses:
+        204:
+          description: Event Removed
+          content:
+            application/json:
+              schema: SuccessSchema
+    """
     cleanup_event(event)
     db.session.delete(event)
     db.session.commit()
     app.logger.info("Unregistered event %r", event)
-    return "", 204
+    return jsonify({"success": True}), 204
 
 
 @app.route("/event/<identifier>")
 @require_event_token
 def get_event_info(event):
-    return jsonify(
-        service=SERVICE_INFO, title=event.title, url=event.url, can_disconnect=True
-    )
+    """Get information about an event
+    ---
+    get:
+      description: Get information about an event
+      operationId: getEvent
+      tags: ["event", "get"]
+      security:
+        - bearer_token: []
+      parameters:
+        - in: path
+          schema: IdentifierParameter
+      responses:
+        200:
+          description: Event Info
+          content:
+            application/json:
+              schema: EventInfoSchema
+    """
+    return EventInfoSchema().dump(event)
+
+
+@app.cli.command("openapi")
+@click.option(
+    "--json", is_flag=True,
+)
+@click.option(
+    "--test", "-t", is_flag=True, help="Specify a test server (useful for Swagger UI)",
+)
+@click.option("--host", "-h")
+@click.option("--port", "-p")
+def _openapi(test, json, host, port):
+    """Generate OpenAPI metadata from Flask app."""
+    with app.test_request_context():
+        spec = register_spec(test=test, test_host=host, test_port=port)
+        spec.path(view=info)
+        spec.path(view=create_event)
+        spec.path(view=remove_event)
+        spec.path(view=get_event_info)
+
+        if json:
+            print(_json.dumps(spec.to_dict()))
+        else:
+            print(spec.to_yaml())

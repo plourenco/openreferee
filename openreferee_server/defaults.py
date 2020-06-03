@@ -1,4 +1,7 @@
-SERVICE_INFO = {"version": "0.1-dev", "name": "Test Service"}
+from . import __version__
+
+
+SERVICE_INFO = {"version": __version__, "name": "OpenReferee Reference Implementation"}
 DEFAULT_TAGS = {
     "ERR_WRONG_TITLE": {"title": "Wrong Title", "color": "red", "system": True},
     "ERR_SILLY_TITLE": {"title": "Silly Title", "color": "orange", "system": True},
