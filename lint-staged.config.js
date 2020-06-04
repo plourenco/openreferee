@@ -3,6 +3,6 @@ module.exports = {
     `isort ${files}`,
     `black ${files}`,
     "npm run api-spec",
-    "npx speccy lint specs/spec.yaml"
+    "npx speccy lint specs/openreferee.yaml"
   ]
 }

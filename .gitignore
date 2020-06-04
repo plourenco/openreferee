@@ -16,4 +16,4 @@ pip-wheel-metadata/
 node_modules
 
 # Generated files
-specs/
+specs/openreferee.test.json

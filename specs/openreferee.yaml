@@ -1,0 +1,200 @@
+components:
+  schemas:
+    Event:
+      properties:
+        config_endpoints:
+          $ref: '#/components/schemas/EventEndpoints'
+        title:
+          type: string
+        token:
+          type: string
+        url:
+          format: url
+          type: string
+      required:
+      - config_endpoints
+      - title
+      - token
+      - url
+      type: object
+    EventEndpoints:
+      properties:
+        editable_types:
+          type: string
+        file_types:
+          additionalProperties:
+            $ref: '#/components/schemas/Generated'
+          type: object
+        tags:
+          $ref: '#/components/schemas/Generated1'
+      required:
+      - editable_types
+      - file_types
+      type: object
+    EventInfo:
+      properties:
+        can_disconnect:
+          type: boolean
+        service:
+          $ref: '#/components/schemas/Generated2'
+        title:
+          type: string
+        url:
+          format: url
+          type: string
+      required:
+      - can_disconnect
+      - service
+      - title
+      - url
+      type: object
+    Generated:
+      properties:
+        create:
+          type: string
+        list:
+          type: string
+      required:
+      - create
+      - list
+      type: object
+    Generated1:
+      properties:
+        create:
+          type: string
+        list:
+          type: string
+      required:
+      - create
+      - list
+      type: object
+    Generated2:
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+      type: object
+    ServiceInfo:
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+      required:
+      - name
+      - version
+      type: object
+    Success:
+      properties:
+        success:
+          type: boolean
+      required:
+      - success
+      type: object
+  securitySchemes:
+    bearer_token:
+      scheme: bearer
+      type: http
+info:
+  contact:
+    email: indico-team@cern.ch
+    name: Indico Team
+    url: https://github.com/indico/openreferee
+  title: OpenReferee
+  version: 0.0.1
+openapi: 3.0.2
+paths:
+  /info:
+    get:
+      description: Get service info
+      operationId: getServiceInfo
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+          description: Service Info
+      tags:
+      - service
+      - information
+  /event/{identifier}:
+    put:
+      description: Create an Event
+      operationId: createEvent
+      parameters:
+      - description: The unique ID which represents the event
+        in: path
+        name: identifier
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Event'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: Event Created
+      tags:
+      - event
+      - create
+    delete:
+      description: Remove an Event
+      operationId: removeEvent
+      parameters:
+      - description: The unique ID which represents the event
+        in: path
+        name: identifier
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Success'
+          description: Event Removed
+      security:
+      - bearer_token: []
+      tags:
+      - event
+      - remove
+    get:
+      description: Get information about an event
+      operationId: getEvent
+      parameters:
+      - description: The unique ID which represents the event
+        in: path
+        name: identifier
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventInfo'
+          description: Event Info
+      security:
+      - bearer_token: []
+      tags:
+      - event
+      - get
+servers: []
+tags:
+- name: create
+- name: event
+- name: get
+- name: info
+- name: remove
+- name: service
+

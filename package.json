@@ -6,10 +6,10 @@
     "black": "black setup.py openreferee_server/",
     "pycodestyle": "pycodestyle openreferee_server/",
     "flake8": "flake8 openreferee_server/",
-    "api-spec": "FLASK_APP=openreferee_server flask openapi > specs/spec.yaml",
-    "api-spec-test": "FLASK_APP=openreferee_server flask openapi --json --test -h localhost -p 12345 > specs/spec.test.json",
-    "api-docs": "npm run api-spec && speccy serve specs/spec.yaml",
-    "swagger-ui": "npm run api-spec-test && docker run -p 5001:8080 -e SWAGGER_JSON=/specs/spec.test.json -v $(pwd)/specs:/specs swaggerapi/swagger-ui"
+    "api-spec": "FLASK_APP=openreferee_server flask openapi > specs/openreferee.yaml",
+    "api-spec-test": "FLASK_APP=openreferee_server flask openapi --json --test -h localhost -p 12345 > specs/openreferee.test.json",
+    "api-docs": "npm run api-spec && speccy serve specs/openreferee.yaml",
+    "swagger-ui": "npm run api-spec-test && docker run -p 5001:8080 -e SWAGGER_JSON=/specs/openreferee.test.json -v $(pwd)/specs:/specs swaggerapi/swagger-ui"
   },
   "husky": {
     "hooks": {

@@ -33,7 +33,7 @@ def register_spec(test=False, test_host="localhost", test_port=12345):
     spec = APISpec(
         title="OpenReferee",
         version=__version__,
-        openapi_version="3.0.3",
+        openapi_version="3.0.2",
         info={
             "contact": {
                 "name": "Indico Team",
