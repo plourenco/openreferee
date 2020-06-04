@@ -11,12 +11,6 @@
     "api-docs": "npm run api-spec && speccy serve specs/spec.yaml",
     "swagger-ui": "npm run api-spec-test && docker run -p 5001:8080 -e SWAGGER_JSON=/specs/spec.test.json -v $(pwd)/specs:/specs swaggerapi/swagger-ui"
   },
-  "lint-staged": {
-    "*.py": [
-      "isort",
-      "black"
-    ]
-  },
   "husky": {
     "hooks": {
       "pre-commit": "lint-staged"
