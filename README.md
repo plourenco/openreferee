@@ -12,7 +12,7 @@ npm i
 
 ### Running Test Server
 ```
-FLASK_ENV=development FLASK_DEBUG=1 FLASK_APP=openreferee_server flask run -p 12345
+flask run -p 12345
 ```
 
 ### Consulting API Docs
@@ -26,7 +26,7 @@ Docs available at http://localhost:5000
 
 First, let's run the test server with CORS enabled
 ```
-FLASK_ENABLE_CORS=1 FLASK_ENV=development FLASK_DEBUG=1 FLASK_APP=openreferee_server flask run -p 12345
+FLASK_ENABLE_CORS=1 flask run -p 12345
 ```
 
 Then, run the Swagger UI:
