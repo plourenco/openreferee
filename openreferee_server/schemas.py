@@ -24,7 +24,7 @@ class EventEndpointsSchema(Schema):
 class EventSchema(Schema):
     title = fields.String(required=True)
     url = fields.URL(schemes={"http", "https"}, required=True)
-    token = fields.String(required=True)
+    tok = fields.String(required=True)
     config_endpoints = fields.Nested(EventEndpointsSchema, required=True,)
 
 
