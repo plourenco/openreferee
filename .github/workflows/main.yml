@@ -24,7 +24,7 @@ jobs:
             architecture: 'x64'
       - name: Generate OpenAPI spec from the application
         run: |
-          pip install -e .
+          pip install -e '.[dev]'
           npm ci
           cp specs/openreferee.yaml specs/openreferee.old.yaml
           npm run api-spec
