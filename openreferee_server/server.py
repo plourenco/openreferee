@@ -15,8 +15,9 @@ from .operations import (
     setup_event_tags,
     setup_file_types,
     setup_requests_session,
+    process_editable_files,
 )
-from .schemas import EventInfoSchema, EventSchema
+from .schemas import EventInfoSchema, EventSchema, EditableSchema
 
 
 def require_event_token(fn):
@@ -63,7 +64,7 @@ def info():
 
 @api.route("/event/<identifier>", methods=("PUT",))
 @use_kwargs(EventSchema, location="json")
-def create_event(identifier, title, url, token, config_endpoints):
+def create_event(identifier, title, url, token, endpoints):
     """Create an Event.
     ---
     put:
@@ -85,11 +86,7 @@ def create_event(identifier, title, url, token, config_endpoints):
               schema: SuccessSchema
     """
     event = Event(
-        identifier=identifier,
-        title=title,
-        url=url,
-        token=token,
-        config_endpoints=config_endpoints,
+        identifier=identifier, title=title, url=url, token=token, endpoints=endpoints,
     )
     db.session.add(event)
     try:
@@ -102,8 +99,7 @@ def create_event(identifier, title, url, token, config_endpoints):
     setup_event_tags(session, event)
 
     response = session.post(
-        config_endpoints["editable_types"],
-        json={"editable_types": list(DEFAULT_EDITABLES)},
+        endpoints["editable_types"], json={"editable_types": list(DEFAULT_EDITABLES)},
     )
     response.raise_for_status()
 
@@ -163,6 +159,21 @@ def get_event_info(event):
               schema: EventInfoSchema
     """
     return EventInfoSchema().dump(event)
+
+
+@api.route(
+    "/event/<identifier>/contributions/<contrib_id>/editing/<any(paper,slides,poster):file_type>",
+    methods=("POST",),
+)
+@use_kwargs(EditableSchema, location="json")
+@require_event_token
+def create_editable(event, contrib_id, file_type, files, endpoints):
+    current_app.logger.info(
+        "A new %r editable was submitted for contribution %r", file_type, contrib_id
+    )
+    session = setup_requests_session(event.token)
+    process_editable_files(session, files, endpoints)
+    return "", 201
 
 
 @api.cli.command("openapi")

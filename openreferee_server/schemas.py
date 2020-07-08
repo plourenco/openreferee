@@ -1,4 +1,4 @@
-from marshmallow import Schema
+from marshmallow import Schema, EXCLUDE
 from webargs import fields
 
 from .defaults import SERVICE_INFO
@@ -17,11 +17,18 @@ class EventEndpointsSchema(Schema):
     )
 
 
+class EditableEndpointsSchema(Schema):
+    revisions = fields.Nested({
+        'replace': fields.String(required=True)
+    })
+    file_upload = fields.String(required=True)
+
+
 class EventSchema(Schema):
     title = fields.String(required=True)
     url = fields.URL(schemes={"http", "https"}, required=True)
     token = fields.String(required=True)
-    config_endpoints = fields.Nested(EventEndpointsSchema, required=True,)
+    endpoints = fields.Nested(EventEndpointsSchema, required=True,)
 
 
 class EventInfoServiceSchema(Schema):
@@ -36,6 +43,19 @@ class EventInfoSchema(Schema):
     service = fields.Nested(
         EventInfoServiceSchema, required=True, default=SERVICE_INFO,
     )
+
+
+class FileSchema(Schema):
+    uuid = fields.String()
+    filename = fields.String(required=True)
+    content_type = fields.String()
+    external_download_url = fields.String(required=True)
+    file_type = fields.Integer(required=True)
+
+
+class EditableSchema(Schema):
+    files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
+    endpoints = fields.Nested(EditableEndpointsSchema, required=True)
 
 
 class SuccessSchema(Schema):

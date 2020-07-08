@@ -1,4 +1,10 @@
+import io
+import tempfile
+from collections import defaultdict
+from urllib.request import urlopen, Request
+
 import requests
+from PyPDF2 import PdfFileWriter, PdfFileReader
 from flask import current_app
 
 from .defaults import DEFAULT_EDITABLES, DEFAULT_FILE_TYPES, DEFAULT_TAGS
@@ -13,7 +19,7 @@ def setup_requests_session(token):
 
 
 def get_event_tags(session, event):
-    tag_endpoint = event.config_endpoints["tags"]["list"]
+    tag_endpoint = event.endpoints["tags"]["list"]
 
     current_app.logger.info("Fetching available tags...")
     response = session.get(tag_endpoint)
@@ -22,7 +28,7 @@ def get_event_tags(session, event):
 
 
 def setup_event_tags(session, event):
-    tag_endpoint = event.config_endpoints["tags"]["create"]
+    tag_endpoint = event.endpoints["tags"]["create"]
     available_tags = get_event_tags(session, event)
 
     current_app.logger.info("Adding missing tags...")
@@ -49,7 +55,7 @@ def cleanup_event_tags(session, event):
 
 
 def get_file_types(session, event, editable):
-    endpoint = event.config_endpoints["file_types"][editable]["list"]
+    endpoint = event.endpoints["file_types"][editable]["list"]
     current_app.logger.info("Fetching available file types ({})...".format(editable))
     response = session.get(endpoint)
     response.raise_for_status()
@@ -62,7 +68,7 @@ def setup_file_types(session, event):
         for type_data in DEFAULT_FILE_TYPES[editable]:
             if type_data["name"] in available_file_types:
                 continue
-            endpoint = event.config_endpoints["file_types"][editable]["create"]
+            endpoint = event.endpoints["file_types"][editable]["create"]
             response = session.post(endpoint, json=type_data)
             response.raise_for_status()
             current_app.logger.info(
@@ -87,3 +93,29 @@ def cleanup_event(event):
     session = setup_requests_session(event.token)
     cleanup_event_tags(session, event)
     cleanup_file_types(session, event)
+
+
+def process_editable_files(session, files, endpoints):
+    uploaded = defaultdict(list)
+    for _file in files:
+        if _file['filename'].split(".")[-1] == 'pdf':
+            upload = process_pdf(_file['external_download_url'], session, endpoints['file_upload'])
+            uploaded[_file['file_type']].append(upload['uuid'])
+    session.post(endpoints['revisions']['replace'], json={
+        'files': uploaded,
+        'state': 'ready_for_review'
+    })
+
+
+def process_pdf(url, session, upload_endpoint):
+    pdf_writer = PdfFileWriter()
+    rf = urlopen(Request(url, headers=session.headers))
+    pdf_reader = PdfFileReader(io.BytesIO(rf.read()))
+    for page in range(0, pdf_reader.numPages):
+        rotated_page = pdf_reader.getPage(page).rotateClockwise(90)
+        pdf_writer.addPage(rotated_page)
+    with tempfile.NamedTemporaryFile(suffix='.pdf') as f:
+        pdf_writer.write(f)
+        f.seek(0)
+        r = session.post(upload_endpoint, files={'file': f})
+        return r.json()

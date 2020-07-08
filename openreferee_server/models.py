@@ -7,4 +7,4 @@ class Event(db.Model):
     title = db.Column(db.String, nullable=False)
     url = db.Column(db.String, nullable=False)
     token = db.Column(db.String, nullable=False)
-    config_endpoints = db.Column(db.JSON, nullable=False)
+    endpoints = db.Column(db.JSON, nullable=False)
