@@ -43,8 +43,8 @@ jobs:
             echo "::set-env name=GH_COMMENT_FILE::${COMMENT_FILE}"
             printf ":warning: There are differences between the generated spec and the app" > ${COMMENT_FILE}
             printf "\n\n\`\`\`diff\n" >> ${COMMENT_FILE}
-            cat ${{ env.DIFF_FILE }} >> ${GH_COMMENT_FILE }
-            printf "\n\`\`\`\n" >> ${GH_COMMENT_FILE }
+            cat ${{ env.DIFF_FILE }} >> ${COMMENT_FILE}
+            printf "\n\`\`\`\n" >> ${COMMENT_FILE}
           fi
       - name: comment PR
         if: ${{ env.GH_COMMENT_FILE }}
