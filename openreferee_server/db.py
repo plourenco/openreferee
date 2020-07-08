@@ -1,9 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 
-from .app import app
 
-
-db = SQLAlchemy(app)
+db = SQLAlchemy()
 db.Model.metadata.naming_convention = {
     "fk": "fk_%(table_name)s_%(column_names)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s",

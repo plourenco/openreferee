@@ -1,13 +1,12 @@
 from functools import wraps
 
 import click
-from flask import json as _json
-from flask import jsonify, request
+from flask import Blueprint, current_app, json, jsonify, request
 from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_kwargs
 from werkzeug.exceptions import Conflict, NotFound, Unauthorized
 
-from .app import app, register_spec
+from .app import register_spec
 from .db import db
 from .defaults import DEFAULT_EDITABLES, SERVICE_INFO
 from .models import Event
@@ -40,7 +39,10 @@ def require_event_token(fn):
     return wrapper
 
 
-@app.route("/info")
+api = Blueprint("api", __name__, cli_group=None)
+
+
+@api.route("/info")
 def info():
     """Get service info
     ---
@@ -59,7 +61,7 @@ def info():
     return jsonify(SERVICE_INFO)
 
 
-@app.route("/event/<identifier>", methods=("PUT",))
+@api.route("/event/<identifier>", methods=("PUT",))
 @use_kwargs(EventSchema, location="json")
 def create_event(identifier, title, url, token, config_endpoints):
     """Create an Event.
@@ -94,7 +96,7 @@ def create_event(identifier, title, url, token, config_endpoints):
         db.session.flush()
     except IntegrityError:
         raise Conflict("Event already exists")
-    app.logger.info("Registered event %r", event)
+    current_app.logger.info("Registered event %r", event)
 
     session = setup_requests_session(token)
     setup_event_tags(session, event)
@@ -111,7 +113,7 @@ def create_event(identifier, title, url, token, config_endpoints):
     return jsonify({"success": True}), 201
 
 
-@app.route("/event/<identifier>", methods=("DELETE",))
+@api.route("/event/<identifier>", methods=("DELETE",))
 @require_event_token
 def remove_event(event):
     """Remove an Event.
@@ -135,11 +137,11 @@ def remove_event(event):
     cleanup_event(event)
     db.session.delete(event)
     db.session.commit()
-    app.logger.info("Unregistered event %r", event)
+    current_app.logger.info("Unregistered event %r", event)
     return jsonify({"success": True}), 204
 
 
-@app.route("/event/<identifier>")
+@api.route("/event/<identifier>")
 @require_event_token
 def get_event_info(event):
     """Get information about an event
@@ -163,25 +165,25 @@ def get_event_info(event):
     return EventInfoSchema().dump(event)
 
 
-@app.cli.command("openapi")
+@api.cli.command("openapi")
 @click.option(
-    "--json", is_flag=True,
+    "--json", "as_json", is_flag=True,
 )
 @click.option(
     "--test", "-t", is_flag=True, help="Specify a test server (useful for Swagger UI)",
 )
 @click.option("--host", "-h")
 @click.option("--port", "-p")
-def _openapi(test, json, host, port):
+def _openapi(test, as_json, host, port):
     """Generate OpenAPI metadata from Flask app."""
-    with app.test_request_context():
+    with current_app.test_request_context():
         spec = register_spec(test=test, test_host=host, test_port=port)
         spec.path(view=info)
         spec.path(view=create_event)
         spec.path(view=remove_event)
         spec.path(view=get_event_info)
 
-        if json:
-            print(_json.dumps(spec.to_dict()))
+        if as_json:
+            print(json.dumps(spec.to_dict()))
         else:
             print(spec.to_yaml())
