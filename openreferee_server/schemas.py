@@ -71,3 +71,15 @@ class IdentifierParameter(Schema):
     identifier = fields.String(
         required=True, description="The unique ID which represents the event"
     )
+
+
+class EditableParameters(Schema):
+    identifier = fields.String(
+        required=True, description="The unique ID which represents the event"
+    )
+    contrib_id = fields.Integer(
+        required=True, description="The unique ID which represents the contribution"
+    )
+    editable_type = fields.String(
+        required=True, description="The name which represents the editable type"
+    )
