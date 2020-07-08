@@ -25,7 +25,7 @@ jobs:
       - name: Generate OpenAPI spec from the application
         run: |
           pip install -e .
-          npm i .
+          npm ci
           cp specs/openreferee.yaml specs/openreferee.old.yaml
           npm run api-spec
       - name: Set up env variables

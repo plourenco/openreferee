@@ -2,7 +2,7 @@
   "name": "openreferee-refserver",
   "private": true,
   "scripts": {
-    "isort": "isort --recursive setup.py openreferee_server/",
+    "isort": "isort setup.py openreferee_server/",
     "black": "black setup.py openreferee_server/",
     "pycodestyle": "pycodestyle openreferee_server/",
     "flake8": "flake8 openreferee_server/",

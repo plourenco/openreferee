@@ -6,8 +6,8 @@ This is a reference implementation of the OpenReferee Specification.
 
 ### Development setup
 ```
-pip install -e .
-npm i
+pip install -e '.[dev]'
+npm ci
 ```
 
 ### Running Test Server

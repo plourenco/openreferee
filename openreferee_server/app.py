@@ -4,15 +4,20 @@ from apispec import APISpec
 from apispec.ext.marshmallow import MarshmallowPlugin
 from apispec_webframeworks.flask import FlaskPlugin
 from flask import Flask, jsonify
-from flask_cors import CORS
 from werkzeug.exceptions import HTTPException, UnprocessableEntity
 
 from . import __version__
 
 
+try:
+    from flask_cors import CORS
+except ImportError:
+    CORS = None
+
+
 def create_app():
     app = Flask(__name__)
-    if os.environ.get("FLASK_ENABLE_CORS"):
+    if os.environ.get("FLASK_ENABLE_CORS") and CORS is not None:
         CORS(app)
     app.config["SQLALCHEMY_DATABASE_URI"] = "postgresql:///editingsvc"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
