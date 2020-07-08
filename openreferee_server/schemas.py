@@ -4,20 +4,16 @@ from webargs import fields
 from .defaults import SERVICE_INFO
 
 
+class ListEndpointSchema(Schema):
+    create = fields.String(required=True)
+    list = fields.String(required=True)
+
+
 class EventEndpointsSchema(Schema):
-    tags = fields.Nested(
-        {"create": fields.String(required=True), "list": fields.String(required=True)}
-    )
+    tags = fields.Nested(ListEndpointSchema)
     editable_types = fields.String(required=True)
     file_types = fields.Dict(
-        keys=fields.String(),
-        values=fields.Nested(
-            {
-                "create": fields.String(required=True),
-                "list": fields.String(required=True),
-            }
-        ),
-        required=True,
+        keys=fields.String(), values=fields.Nested(ListEndpointSchema), required=True,
     )
 
 
@@ -28,14 +24,17 @@ class EventSchema(Schema):
     config_endpoints = fields.Nested(EventEndpointsSchema, required=True,)
 
 
+class EventInfoServiceSchema(Schema):
+    version = fields.String()
+    name = fields.String()
+
+
 class EventInfoSchema(Schema):
     title = fields.String(required=True)
     url = fields.URL(schemes={"http", "https"}, required=True)
     can_disconnect = fields.Boolean(required=True, default=True)
     service = fields.Nested(
-        {"version": fields.String(), "name": fields.String()},
-        required=True,
-        default=SERVICE_INFO,
+        EventInfoServiceSchema, required=True, default=SERVICE_INFO,
     )
 
 

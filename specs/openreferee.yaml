@@ -23,10 +23,10 @@ components:
           type: string
         file_types:
           additionalProperties:
-            $ref: '#/components/schemas/Generated'
+            $ref: '#/components/schemas/ListEndpoint'
           type: object
         tags:
-          $ref: '#/components/schemas/Generated1'
+          $ref: '#/components/schemas/ListEndpoint'
       required:
       - editable_types
       - file_types
@@ -36,7 +36,7 @@ components:
         can_disconnect:
           type: boolean
         service:
-          $ref: '#/components/schemas/Generated2'
+          $ref: '#/components/schemas/EventInfoService'
         title:
           type: string
         url:
@@ -48,32 +48,22 @@ components:
       - title
       - url
       type: object
-    Generated:
-      properties:
-        create:
-          type: string
-        list:
-          type: string
-      required:
-      - create
-      - list
-      type: object
-    Generated1:
-      properties:
-        create:
-          type: string
-        list:
-          type: string
-      required:
-      - create
-      - list
-      type: object
-    Generated2:
+    EventInfoService:
       properties:
         name:
           type: string
         version:
           type: string
+      type: object
+    ListEndpoint:
+      properties:
+        create:
+          type: string
+        list:
+          type: string
+      required:
+      - create
+      - list
       type: object
     ServiceInfo:
       properties:
