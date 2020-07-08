@@ -162,18 +162,40 @@ def get_event_info(event):
 
 
 @api.route(
-    "/event/<identifier>/contributions/<contrib_id>/editing/<any(paper,slides,poster):file_type>",
+    "/event/<identifier>/contributions/<contrib_id>/editing/<any(paper,slides,poster):editable_type>",
     methods=("POST",),
 )
 @use_kwargs(EditableSchema, location="json")
 @require_event_token
-def create_editable(event, contrib_id, file_type, files, endpoints):
+def create_editable(event, contrib_id, editable_type, files, endpoints):
+    """A new editable is created
+    ---
+    post:
+      description: Called when a new editable is created
+      operationId: createEditable
+      tags: ["editable", "create"]
+      security:
+        - bearer_token: []
+      requestBody:
+        content:
+          application/json:
+            schema: EditableSchema
+      parameters:
+        - in: path
+          schema: EditableParameters
+      responses:
+        200:
+          description: Editable processed
+          content:
+            application/json:
+              schema: SuccessSchema
+    """
     current_app.logger.info(
-        "A new %r editable was submitted for contribution %r", file_type, contrib_id
+        "A new %r editable was submitted for contribution %r", editable_type, contrib_id
     )
     session = setup_requests_session(event.token)
     process_editable_files(session, files, endpoints)
-    return "", 201
+    return jsonify({"success": True}), 201
 
 
 @api.cli.command("openapi")
@@ -193,6 +215,7 @@ def _openapi(test, as_json, host, port):
         spec.path(view=create_event)
         spec.path(view=remove_event)
         spec.path(view=get_event_info)
+        spec.path(view=create_editable)
 
         if as_json:
             print(json.dumps(spec.to_dict()))
