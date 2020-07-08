@@ -1,6 +1,7 @@
 import io
 import tempfile
 from collections import defaultdict
+from pathlib import Path
 from urllib.request import urlopen, Request
 
 import requests
@@ -111,9 +112,12 @@ def process_pdf(url, session, upload_endpoint):
     pdf_writer = PdfFileWriter()
     rf = urlopen(Request(url, headers=session.headers))
     pdf_reader = PdfFileReader(io.BytesIO(rf.read()))
+    watermark_pdf = PdfFileReader(open(Path(__file__).parent / 'watermark.pdf', 'rb'))
+    watermark_page = watermark_pdf.getPage(0)
     for page in range(0, pdf_reader.numPages):
-        rotated_page = pdf_reader.getPage(page).rotateClockwise(90)
-        pdf_writer.addPage(rotated_page)
+        page = pdf_reader.getPage(0)
+        page.mergePage(watermark_page)
+        pdf_writer.addPage(page)
     with tempfile.NamedTemporaryFile(suffix='.pdf') as f:
         pdf_writer.write(f)
         f.seek(0)

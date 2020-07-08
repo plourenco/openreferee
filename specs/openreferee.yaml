@@ -2,7 +2,7 @@ components:
   schemas:
     Event:
       properties:
-        config_endpoints:
+        endpoints:
           $ref: '#/components/schemas/EventEndpoints'
         title:
           type: string
@@ -12,7 +12,7 @@ components:
           format: url
           type: string
       required:
-      - config_endpoints
+      - endpoints
       - title
       - token
       - url
