@@ -1,4 +1,4 @@
-from marshmallow import Schema, EXCLUDE
+from marshmallow import EXCLUDE, Schema
 from webargs import fields
 
 from .defaults import SERVICE_INFO
@@ -18,9 +18,7 @@ class EventEndpointsSchema(Schema):
 
 
 class EditableEndpointsSchema(Schema):
-    revisions = fields.Nested({
-        'replace': fields.String(required=True)
-    })
+    revisions = fields.Nested({"replace": fields.String(required=True)})
     file_upload = fields.String(required=True)
 
 

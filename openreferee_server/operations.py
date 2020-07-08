@@ -1,12 +1,11 @@
 import io
-import tempfile
 from collections import defaultdict
 from pathlib import Path
-from urllib.request import urlopen, Request
+from urllib.request import Request, urlopen
 
 import requests
-from PyPDF2 import PdfFileWriter, PdfFileReader
 from flask import current_app
+from PyPDF2 import PdfFileReader, PdfFileWriter
 
 from .defaults import DEFAULT_EDITABLES, DEFAULT_FILE_TYPES, DEFAULT_TAGS
 
@@ -98,28 +97,34 @@ def cleanup_event(event):
 
 def process_editable_files(session, files, endpoints):
     uploaded = defaultdict(list)
-    for _file in files:
-        if _file['filename'].split(".")[-1] == 'pdf':
-            upload = process_pdf(_file['external_download_url'], session, endpoints['file_upload'])
-            uploaded[_file['file_type']].append(upload['uuid'])
-    session.post(endpoints['revisions']['replace'], json={
-        'files': uploaded,
-        'state': 'ready_for_review'
-    })
+    for file in files:
+        if file["filename"].split(".")[-1] == "pdf":
+            upload = process_pdf(
+                file["external_download_url"], session, endpoints["file_upload"]
+            )
+            print(upload)
+            uploaded[file["file_type"]].append(upload["uuid"])
+    session.post(
+        endpoints["revisions"]["replace"],
+        json={"files": uploaded, "state": "ready_for_review"},
+    )
 
 
 def process_pdf(url, session, upload_endpoint):
     pdf_writer = PdfFileWriter()
     rf = urlopen(Request(url, headers=session.headers))
     pdf_reader = PdfFileReader(io.BytesIO(rf.read()))
-    watermark_pdf = PdfFileReader(open(Path(__file__).parent / 'watermark.pdf', 'rb'))
-    watermark_page = watermark_pdf.getPage(0)
-    for page in range(0, pdf_reader.numPages):
-        page = pdf_reader.getPage(0)
-        page.mergePage(watermark_page)
-        pdf_writer.addPage(page)
-    with tempfile.NamedTemporaryFile(suffix='.pdf') as f:
-        pdf_writer.write(f)
-        f.seek(0)
-        r = session.post(upload_endpoint, files={'file': f})
-        return r.json()
+    with (Path(__file__).parent / "watermark.pdf").open("rb") as watermark_file:
+        watermark_pdf = PdfFileReader(watermark_file)
+        watermark_page = watermark_pdf.getPage(0)
+        for page in range(0, pdf_reader.numPages):
+            page = pdf_reader.getPage(0)
+            page.mergePage(watermark_page)
+            pdf_writer.addPage(page)
+            with io.BytesIO() as tmp:
+                pdf_writer.write(tmp)
+                tmp.seek(0)
+                # Preserve the same filename and extension
+                tmp.name = rf.info().get_filename()
+                r = session.post(upload_endpoint, files={"file": tmp})
+                return r.json()

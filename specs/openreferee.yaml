@@ -224,11 +224,18 @@ paths:
       tags:
       - event
       - get
-  /event/{identifier}/contributions/{contrib_id}/editing/{editable_type}:
-    post:
+  /event/{identifier}/editable/{editable_type}/{contrib_id}:
+    put:
       description: Called when a new editable is created
       operationId: createEditable
       parameters:
+      - description: The unique ID which represents the contribution
+        in: path
+        name: contrib_id
+        required: true
+        schema:
+          format: int32
+          type: integer
       - description: The unique ID which represents the event
         in: path
         name: identifier
@@ -241,13 +248,6 @@ paths:
         required: true
         schema:
           type: string
-      - description: The unique ID which represents the contribution
-        in: path
-        name: contrib_id
-        required: true
-        schema:
-          format: int32
-          type: integer
       requestBody:
         content:
           application/json:
@@ -273,4 +273,3 @@ tags:
 - name: info
 - name: remove
 - name: service
-

@@ -12,12 +12,12 @@ from .defaults import DEFAULT_EDITABLES, SERVICE_INFO
 from .models import Event
 from .operations import (
     cleanup_event,
+    process_editable_files,
     setup_event_tags,
     setup_file_types,
     setup_requests_session,
-    process_editable_files,
 )
-from .schemas import EventInfoSchema, EventSchema, EditableSchema
+from .schemas import EditableSchema, EventInfoSchema, EventSchema
 
 
 def require_event_token(fn):
@@ -162,15 +162,15 @@ def get_event_info(event):
 
 
 @api.route(
-    "/event/<identifier>/contributions/<contrib_id>/editing/<any(paper,slides,poster):editable_type>",
-    methods=("POST",),
+    "/event/<identifier>/editable/<any(paper,slides,poster):editable_type>/<contrib_id>",
+    methods=("PUT",),
 )
 @use_kwargs(EditableSchema, location="json")
 @require_event_token
 def create_editable(event, contrib_id, editable_type, files, endpoints):
     """A new editable is created
     ---
-    post:
+    put:
       description: Called when a new editable is created
       operationId: createEditable
       tags: ["editable", "create"]
