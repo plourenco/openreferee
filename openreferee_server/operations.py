@@ -96,7 +96,8 @@ def cleanup_event(event):
     cleanup_file_types(session, event)
 
 
-def process_editable_files(session, files, endpoints):
+def process_editable_files(session, event, files, endpoints):
+    available_tags = get_event_tags(session, event)
     uploaded = defaultdict(list)
     for file in files:
         if os.path.splitext(file["filename"])[1] != ".pdf":
@@ -108,7 +109,12 @@ def process_editable_files(session, files, endpoints):
         uploaded[file["file_type"]].append(upload["uuid"])
     response = session.post(
         endpoints["revisions"]["replace"],
-        json={"files": uploaded, "state": "ready_for_review"},
+        json={
+            "files": uploaded,
+            "state": "ready_for_review",
+            "comment": "PDF has been watermarked.",
+            "tags": [available_tags["WATERMARKED"]["id"]],
+        },
     )
     response.raise_for_status()
 

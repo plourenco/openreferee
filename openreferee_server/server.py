@@ -194,7 +194,7 @@ def create_editable(event, contrib_id, editable_type, files, endpoints):
         "A new %r editable was submitted for contribution %r", editable_type, contrib_id
     )
     session = setup_requests_session(event.token)
-    process_editable_files(session, files, endpoints)
+    process_editable_files(session, event, files, endpoints)
     return jsonify({"success": True}), 201
 
 

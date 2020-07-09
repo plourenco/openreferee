@@ -3,9 +3,10 @@ from . import __version__
 
 SERVICE_INFO = {"version": __version__, "name": "OpenReferee Reference Implementation"}
 DEFAULT_TAGS = {
-    "ERR_WRONG_TITLE": {"title": "Wrong Title", "color": "red", "system": True},
-    "ERR_SILLY_TITLE": {"title": "Silly Title", "color": "orange", "system": True},
-    "OK_TITLE": {"title": "Title OK", "color": "green", "system": True},
+    "ERR_WRONG_TITLE": {"title": "Wrong Title", "color": "red", "system": False},
+    "ERR_SILLY_TITLE": {"title": "Silly Title", "color": "orange", "system": False},
+    "OK_TITLE": {"title": "Title OK", "color": "green", "system": False},
+    "WATERMARKED": {"title": "Watermarked", "color": "brown", "system": True},
 }
 DEFAULT_EDITABLES = {"paper", "poster"}
 DEFAULT_FILE_TYPES = {
