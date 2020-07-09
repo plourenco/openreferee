@@ -1,4 +1,5 @@
 import io
+import os
 from collections import defaultdict
 from pathlib import Path
 from urllib.request import Request, urlopen
@@ -98,16 +99,18 @@ def cleanup_event(event):
 def process_editable_files(session, files, endpoints):
     uploaded = defaultdict(list)
     for file in files:
-        if file["filename"].split(".")[-1] == "pdf":
-            upload = process_pdf(
-                file["external_download_url"], session, endpoints["file_upload"]
-            )
-            print(upload)
-            uploaded[file["file_type"]].append(upload["uuid"])
-    session.post(
+        if os.path.splitext(file["filename"])[1] != ".pdf":
+            uploaded[file["file_type"]].append(file["uuid"])
+            continue
+        upload = process_pdf(
+            file["external_download_url"], session, endpoints["file_upload"]
+        )
+        uploaded[file["file_type"]].append(upload["uuid"])
+    response = session.post(
         endpoints["revisions"]["replace"],
         json={"files": uploaded, "state": "ready_for_review"},
     )
+    response.raise_for_status()
 
 
 def process_pdf(url, session, upload_endpoint):
