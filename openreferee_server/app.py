@@ -7,7 +7,7 @@ from flask import Flask, jsonify
 from werkzeug.exceptions import HTTPException, UnprocessableEntity
 
 from . import __version__
-from .db import db
+from .db import db, register_db_cli
 
 
 try:
@@ -26,6 +26,7 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     register_error_handlers(app)
     db.init_app(app)
+    register_db_cli(app)
     app.register_blueprint(api)
     return app
 

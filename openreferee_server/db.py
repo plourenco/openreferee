@@ -13,3 +13,14 @@ db.Model.metadata.naming_convention = {
     ),
     "unique_index": lambda constraint, table: "uq_" if constraint.unique else "",
 }
+
+
+def register_db_cli(app):
+    @app.cli.group("db")
+    def cli():
+        """Manage the database."""
+
+    @cli.command()
+    def create():
+        """Create the database tables."""
+        db.create_all()
