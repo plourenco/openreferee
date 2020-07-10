@@ -1,8 +1,7 @@
-import io
 import os
 from collections import defaultdict
+from io import BytesIO
 from pathlib import Path
-from urllib.request import Request, urlopen
 
 import requests
 from flask import current_app
@@ -103,9 +102,7 @@ def process_editable_files(session, event, files, endpoints):
         if os.path.splitext(file["filename"])[1] != ".pdf":
             uploaded[file["file_type"]].append(file["uuid"])
             continue
-        upload = process_pdf(
-            file["external_download_url"], session, endpoints["file_upload"]
-        )
+        upload = process_pdf(file, session, endpoints["file_upload"])
         uploaded[file["file_type"]].append(upload["uuid"])
     response = session.post(
         endpoints["revisions"]["replace"],
@@ -119,21 +116,23 @@ def process_editable_files(session, event, files, endpoints):
     response.raise_for_status()
 
 
-def process_pdf(url, session, upload_endpoint):
+def process_pdf(file, session, upload_endpoint):
     pdf_writer = PdfFileWriter()
-    rf = urlopen(Request(url, headers=session.headers))
-    pdf_reader = PdfFileReader(io.BytesIO(rf.read()))
+    resp = session.get(file["external_download_url"])
+    resp.raise_for_status()
+    pdf_reader = PdfFileReader(BytesIO(resp.content))
     with (Path(__file__).parent / "watermark.pdf").open("rb") as watermark_file:
         watermark_pdf = PdfFileReader(watermark_file)
         watermark_page = watermark_pdf.getPage(0)
-        for page in range(0, pdf_reader.numPages):
-            page = pdf_reader.getPage(0)
+        for i in range(pdf_reader.numPages):
+            page = pdf_reader.getPage(i)
             page.mergePage(watermark_page)
             pdf_writer.addPage(page)
-            with io.BytesIO() as tmp:
-                pdf_writer.write(tmp)
-                tmp.seek(0)
-                # Preserve the same filename and extension
-                tmp.name = rf.info().get_filename()
-                r = session.post(upload_endpoint, files={"file": tmp})
-                return r.json()
+        with BytesIO() as buf:
+            pdf_writer.write(buf)
+            buf.seek(0)
+            r = session.post(
+                upload_endpoint,
+                files={"file": (file["filename"], buf, file["content_type"])},
+            )
+            return r.json()
