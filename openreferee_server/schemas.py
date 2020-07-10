@@ -72,6 +72,10 @@ class IdentifierParameter(Schema):
 
 
 class EditableParameters(Schema):
+    class Meta:
+        # avoid inconsistency when generating openapi locally and during CI
+        ordered = True
+
     identifier = fields.String(
         required=True, description="The unique ID which represents the event"
     )
