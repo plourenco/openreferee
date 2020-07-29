@@ -56,6 +56,22 @@ class EditableSchema(Schema):
     endpoints = fields.Nested(EditableEndpointsSchema, required=True)
 
 
+class EditingUserSchema(Schema):
+    id = fields.Integer(required=True)
+    full_name = fields.String(required=True)
+    identifier = fields.String(required=True)
+    avatar_bg_color = fields.String()
+
+
+class RevisionSchema(Schema):
+    comment = fields.String(required=True)
+    # submitter = fields.Nested(EditingUserSchema, required=True)
+    # editor = fields.Nested(EditingUserSchema, required=True)
+    # files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
+    final_state = fields.Nested({"name": fields.String(required=True)}, unknown=EXCLUDE)
+    external_create_comment_url = fields.String(required=True)
+
+
 class SuccessSchema(Schema):
     success = fields.Boolean(required=True)
 

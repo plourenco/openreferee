@@ -2,6 +2,7 @@ from functools import wraps
 
 import click
 from flask import Blueprint, current_app, json, jsonify, request
+from marshmallow import EXCLUDE
 from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_kwargs
 from werkzeug.exceptions import Conflict, NotFound, Unauthorized
@@ -13,11 +14,12 @@ from .models import Event
 from .operations import (
     cleanup_event,
     process_editable_files,
+    process_revision,
     setup_event_tags,
     setup_file_types,
     setup_requests_session,
 )
-from .schemas import EditableSchema, EventInfoSchema, EventSchema
+from .schemas import EditableSchema, EventInfoSchema, EventSchema, RevisionSchema
 
 
 def require_event_token(fn):
@@ -196,6 +198,53 @@ def create_editable(event, contrib_id, editable_type, files, endpoints):
     session = setup_requests_session(event.token)
     process_editable_files(session, event, files, endpoints)
     return jsonify({"success": True}), 201
+
+
+@api.route(
+    "/event/<identifier>/editable/<any(paper,slides,poster):editable_type>/<contrib_id>/<revision_id>",
+    methods=("POST",),
+)
+# TODO: pass it as a single revision object instead of multiple kwargs?
+@use_kwargs(RevisionSchema(unknown=EXCLUDE), location="json")
+@require_event_token
+def review_editable(
+    event,
+    contrib_id,
+    editable_type,
+    revision_id,
+    final_state,
+    comment,
+    external_create_comment_url,
+):
+    """A new revision is created
+    ---
+    post:
+      description: Called when a new editable is revised
+      operationId: reviewEditable
+      tags: ["editable", "review"]
+      security:
+        - bearer_token: []
+      requestBody:
+        content:
+          application/json:
+            schema: RevisionSchema
+      parameters:
+        - in: path
+          schema: EditableParameters
+      responses:
+        200:
+          description: Review processed
+          content:
+            application/json:
+              schema: SuccessSchema
+    """
+    current_app.logger.info(
+        "A new revision %r was submitted for contribution %r", revision_id, contrib_id
+    )
+    if final_state["name"] == "accepted":
+        publish = process_revision(event, comment, external_create_comment_url)
+        return jsonify({"publish": publish}), 201
+    return jsonify({"success": True}), 201  # TODO: settle on an response schema
 
 
 @api.cli.command("openapi")

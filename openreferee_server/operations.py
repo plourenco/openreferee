@@ -116,6 +116,19 @@ def process_editable_files(session, event, files, endpoints):
     response.raise_for_status()
 
 
+def process_revision(event, comment, external_create_comment_url):
+    publish = False
+    session = setup_requests_session(event.token)
+    text = "This revision has been accepted but not published yet."
+    if comment == "publish":
+        text = "This revision has been accepted for publishing."
+        publish = True
+    session.post(
+        external_create_comment_url, json={"text": text, "internal": True},
+    )
+    return publish
+
+
 def process_pdf(file, session, upload_endpoint):
     pdf_writer = PdfFileWriter()
     resp = session.get(file["external_download_url"])
