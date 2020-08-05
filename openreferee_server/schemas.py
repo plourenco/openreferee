@@ -18,7 +18,12 @@ class EventEndpointsSchema(Schema):
 
 
 class EditableEndpointsSchema(Schema):
-    revisions = fields.Nested({"replace": fields.String(required=True)})
+    revisions = fields.Nested(
+        {
+            "details": fields.String(required=True),
+            "replace": fields.String(required=True),
+        }
+    )
     file_upload = fields.String(required=True)
 
 
@@ -44,16 +49,28 @@ class EventInfoSchema(Schema):
 
 
 class FileSchema(Schema):
-    uuid = fields.String()
+    uuid = fields.String(required=True)
     filename = fields.String(required=True)
     content_type = fields.String()
     external_download_url = fields.String(required=True)
     file_type = fields.Integer(required=True)
 
 
-class EditableSchema(Schema):
-    files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
-    endpoints = fields.Nested(EditableEndpointsSchema, required=True)
+class TagSchema(Schema):
+    id = fields.Integer(required=True)
+    code = fields.String(required=True)
+    title = fields.String(required=True)
+    color = fields.String()
+    system = fields.Boolean()
+    verbose_title = fields.String()
+    is_used_in_revision = fields.Boolean()
+    url = fields.String()
+
+
+class RevisionStateSchema(Schema):
+    name = fields.String(required=True)
+    title = fields.String(allow_none=True)
+    css_class = fields.String(allow_none=True)
 
 
 class EditingUserSchema(Schema):
@@ -63,13 +80,42 @@ class EditingUserSchema(Schema):
     avatar_bg_color = fields.String()
 
 
-class RevisionSchema(Schema):
+class EditableSchema(Schema):
+    id = fields.Integer(required=True)
+    type = fields.String()
+    state = fields.String(required=True)
+    editor = fields.Nested(EditingUserSchema, allow_none=True)
+    timeline_url = fields.String()
+    revision_count = fields.Integer()
+
+
+class RevisionSchema(Schema):  # TODO: needs work
     comment = fields.String(required=True)
-    # submitter = fields.Nested(EditingUserSchema, required=True)
-    # editor = fields.Nested(EditingUserSchema, required=True)
-    # files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
-    final_state = fields.Nested({"name": fields.String(required=True)}, unknown=EXCLUDE)
+    submitter = fields.Nested(EditingUserSchema, required=True)
+    editor = fields.Nested(EditingUserSchema, allow_none=True)
+    files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
+    initial_state = fields.Nested(RevisionStateSchema)
+    final_state = fields.Nested(RevisionStateSchema)
+    tags = fields.List(fields.Nested(TagSchema))
     external_create_comment_url = fields.String(required=True)
+
+
+class CreateEditableSchema(Schema):
+    editable = fields.Nested(EditableSchema, required=True)
+    revision = fields.Nested(RevisionSchema, unknown=EXCLUDE, required=True)
+    endpoints = fields.Nested(EditableEndpointsSchema, required=True)
+
+
+class ReviewEditableSchema(Schema):
+    revision = fields.Nested(RevisionSchema, unknown=EXCLUDE, required=True)
+    endpoints = fields.Nested(EditableEndpointsSchema, required=True)
+
+
+class ReviewResponseSchema(Schema):
+    publish = fields.Boolean()
+    tags = fields.String()
+    comment = fields.String()
+    comments = fields.List(fields.String())
 
 
 class SuccessSchema(Schema):
@@ -100,4 +146,10 @@ class EditableParameters(Schema):
     )
     editable_type = fields.String(
         required=True, description="The name which represents the editable type"
+    )
+
+
+class ReviewParameters(EditableParameters):
+    revision_id = fields.String(
+        required=True, description="The unique ID which represents the revision"
     )

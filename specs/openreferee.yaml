@@ -1,15 +1,39 @@
 components:
   schemas:
-    Editable:
+    CreateEditable:
       properties:
+        editable:
+          $ref: '#/components/schemas/Editable'
         endpoints:
           $ref: '#/components/schemas/EditableEndpoints'
-        files:
-          items:
-            $ref: '#/components/schemas/File'
-          type: array
+        revision:
+          $ref: '#/components/schemas/Revision'
       required:
+      - editable
       - endpoints
+      - revision
+      type: object
+    Editable:
+      properties:
+        editor:
+          allOf:
+          - $ref: '#/components/schemas/EditingUser'
+          nullable: true
+        id:
+          format: int32
+          type: integer
+        revision_count:
+          format: int32
+          type: integer
+        state:
+          type: string
+        timeline_url:
+          type: string
+        type:
+          type: string
+      required:
+      - id
+      - state
       type: object
     EditableEndpoints:
       properties:
@@ -19,6 +43,22 @@ components:
           $ref: '#/components/schemas/Generated'
       required:
       - file_upload
+      type: object
+    EditingUser:
+      properties:
+        avatar_bg_color:
+          type: string
+        full_name:
+          type: string
+        id:
+          format: int32
+          type: integer
+        identifier:
+          type: string
+      required:
+      - full_name
+      - id
+      - identifier
       type: object
     Event:
       properties:
@@ -92,12 +132,16 @@ components:
       - external_download_url
       - file_type
       - filename
+      - uuid
       type: object
     Generated:
       properties:
+        details:
+          type: string
         replace:
           type: string
       required:
+      - details
       - replace
       type: object
     ListEndpoint:
@@ -109,6 +153,48 @@ components:
       required:
       - create
       - list
+      type: object
+    Revision:
+      properties:
+        comment:
+          type: string
+        editor:
+          allOf:
+          - $ref: '#/components/schemas/EditingUser'
+          nullable: true
+        external_create_comment_url:
+          type: string
+        files:
+          items:
+            $ref: '#/components/schemas/File'
+          type: array
+        final_state:
+          $ref: '#/components/schemas/RevisionState'
+        initial_state:
+          $ref: '#/components/schemas/RevisionState'
+        submitter:
+          $ref: '#/components/schemas/EditingUser'
+        tags:
+          items:
+            $ref: '#/components/schemas/Tag'
+          type: array
+      required:
+      - comment
+      - external_create_comment_url
+      - submitter
+      type: object
+    RevisionState:
+      properties:
+        css_class:
+          nullable: true
+          type: string
+        name:
+          type: string
+        title:
+          nullable: true
+          type: string
+      required:
+      - name
       type: object
     ServiceInfo:
       properties:
@@ -126,6 +212,30 @@ components:
           type: boolean
       required:
       - success
+      type: object
+    Tag:
+      properties:
+        code:
+          type: string
+        color:
+          type: string
+        id:
+          format: int32
+          type: integer
+        is_used_in_revision:
+          type: boolean
+        system:
+          type: boolean
+        title:
+          type: string
+        url:
+          type: string
+        verbose_title:
+          type: string
+      required:
+      - code
+      - id
+      - title
       type: object
   securitySchemes:
     bearer_token:
@@ -252,13 +362,9 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Editable'
+              $ref: '#/components/schemas/CreateEditable'
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Success'
           description: Editable processed
       security:
       - bearer_token: []

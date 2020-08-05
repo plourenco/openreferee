@@ -7,6 +7,7 @@ DEFAULT_TAGS = {
     "ERR_SILLY_TITLE": {"title": "Silly Title", "color": "orange", "system": False},
     "OK_TITLE": {"title": "Title OK", "color": "green", "system": False},
     "WATERMARKED": {"title": "Watermarked", "color": "brown", "system": True},
+    "QA_APPROVED": {"title": "QA Approved", "color": "green", "system": True},
 }
 DEFAULT_EDITABLES = {"paper", "poster"}
 DEFAULT_FILE_TYPES = {

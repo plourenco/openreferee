@@ -1,7 +1,15 @@
+import threading
 from functools import wraps
 
 import click
-from flask import Blueprint, current_app, json, jsonify, request
+from flask import (
+    Blueprint,
+    copy_current_request_context,
+    current_app,
+    json,
+    jsonify,
+    request,
+)
 from marshmallow import EXCLUDE
 from sqlalchemy.exc import IntegrityError
 from webargs.flaskparser import use_kwargs
@@ -19,7 +27,12 @@ from .operations import (
     setup_file_types,
     setup_requests_session,
 )
-from .schemas import EditableSchema, EventInfoSchema, EventSchema, RevisionSchema
+from .schemas import (
+    CreateEditableSchema,
+    EventInfoSchema,
+    EventSchema,
+    ReviewEditableSchema,
+)
 
 
 def require_event_token(fn):
@@ -108,7 +121,7 @@ def create_event(identifier, title, url, token, endpoints):
     setup_file_types(session, event)
 
     db.session.commit()
-    return jsonify({"success": True}), 201
+    return "", 201
 
 
 @api.route("/event/<identifier>", methods=("DELETE",))
@@ -136,7 +149,7 @@ def remove_event(event):
     db.session.delete(event)
     db.session.commit()
     current_app.logger.info("Unregistered event %r", event)
-    return jsonify({"success": True}), 204
+    return "", 204
 
 
 @api.route("/event/<identifier>")
@@ -167,9 +180,9 @@ def get_event_info(event):
     "/event/<identifier>/editable/<any(paper,slides,poster):editable_type>/<contrib_id>",
     methods=("PUT",),
 )
-@use_kwargs(EditableSchema, location="json")
+@use_kwargs(CreateEditableSchema, location="json")
 @require_event_token
-def create_editable(event, contrib_id, editable_type, files, endpoints):
+def create_editable(event, contrib_id, editable_type, editable, revision, endpoints):
     """A new editable is created
     ---
     put:
@@ -181,41 +194,42 @@ def create_editable(event, contrib_id, editable_type, files, endpoints):
       requestBody:
         content:
           application/json:
-            schema: EditableSchema
+            schema: CreateEditableSchema
       parameters:
         - in: path
           schema: EditableParameters
       responses:
         200:
           description: Editable processed
-          content:
-            application/json:
-              schema: SuccessSchema
     """
     current_app.logger.info(
         "A new %r editable was submitted for contribution %r", editable_type, contrib_id
     )
     session = setup_requests_session(event.token)
-    process_editable_files(session, event, files, endpoints)
-    return jsonify({"success": True}), 201
+
+    @copy_current_request_context
+    def watermark_revision_files():
+        """Wait until the revision has been committed"""
+        response = session.get(endpoints["revisions"]["details"])
+        if response.status_code == 200:
+            process_editable_files(session, event, revision["files"], endpoints)
+            return
+
+        t = threading.Timer(5.0, watermark_revision_files)
+        t.daemon = True
+        t.start()
+
+    watermark_revision_files()
+    return "", 201
 
 
 @api.route(
     "/event/<identifier>/editable/<any(paper,slides,poster):editable_type>/<contrib_id>/<revision_id>",
     methods=("POST",),
 )
-# TODO: pass it as a single revision object instead of multiple kwargs?
-@use_kwargs(RevisionSchema(unknown=EXCLUDE), location="json")
+@use_kwargs(ReviewEditableSchema(unknown=EXCLUDE), location="json")
 @require_event_token
-def review_editable(
-    event,
-    contrib_id,
-    editable_type,
-    revision_id,
-    final_state,
-    comment,
-    external_create_comment_url,
-):
+def review_editable(event, contrib_id, editable_type, revision_id, revision, endpoints):
     """A new revision is created
     ---
     post:
@@ -227,24 +241,24 @@ def review_editable(
       requestBody:
         content:
           application/json:
-            schema: RevisionSchema
+            schema: ReviewEditableSchema
       parameters:
         - in: path
-          schema: EditableParameters
+          schema: ReviewParameters
       responses:
         200:
           description: Review processed
           content:
             application/json:
-              schema: SuccessSchema
+              schema: ReviewResponseSchema
     """
     current_app.logger.info(
         "A new revision %r was submitted for contribution %r", revision_id, contrib_id
     )
-    if final_state["name"] == "accepted":
-        publish = process_revision(event, comment, external_create_comment_url)
-        return jsonify({"publish": publish}), 201
-    return jsonify({"success": True}), 201  # TODO: settle on an response schema
+    if revision["final_state"]["name"] == "accepted":
+        resp = process_revision(event, revision)
+        return jsonify(resp), 201
+    return "", 201
 
 
 @api.cli.command("openapi")

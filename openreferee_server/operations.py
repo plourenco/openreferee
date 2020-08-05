@@ -104,6 +104,7 @@ def process_editable_files(session, event, files, endpoints):
             continue
         upload = process_pdf(file, session, endpoints["file_upload"])
         uploaded[file["file_type"]].append(upload["uuid"])
+
     response = session.post(
         endpoints["revisions"]["replace"],
         json={
@@ -114,19 +115,6 @@ def process_editable_files(session, event, files, endpoints):
         },
     )
     response.raise_for_status()
-
-
-def process_revision(event, comment, external_create_comment_url):
-    publish = False
-    session = setup_requests_session(event.token)
-    text = "This revision has been accepted but not published yet."
-    if comment == "publish":
-        text = "This revision has been accepted for publishing."
-        publish = True
-    session.post(
-        external_create_comment_url, json={"text": text, "internal": True},
-    )
-    return publish
 
 
 def process_pdf(file, session, upload_endpoint):
@@ -149,3 +137,18 @@ def process_pdf(file, session, upload_endpoint):
                 files={"file": (file["filename"], buf, file["content_type"])},
             )
             return r.json()
+
+
+def process_revision(event, revision):
+    publish = False
+    session = setup_requests_session(event.token)
+    text = "This revision has been accepted but not published yet."
+    if revision["comment"] == "publish":
+        text = "This revision has been accepted for publishing."
+        publish = True
+    session.post(
+        revision["external_create_comment_url"], json={"text": text, "internal": True},
+    )
+    return dict(
+        publish=publish, tags=["QA_APPROVED"] if publish else []
+    )  # TODO: tags by code or id?
