@@ -52,6 +52,7 @@ class FileSchema(Schema):
     uuid = fields.String(required=True)
     filename = fields.String(required=True)
     content_type = fields.String()
+    # Only sent by unclaimed files, should be moved if this schema is re-used otherwise
     external_download_url = fields.String(required=True)
     file_type = fields.Integer(required=True)
 
@@ -89,7 +90,7 @@ class EditableSchema(Schema):
     revision_count = fields.Integer()
 
 
-class RevisionSchema(Schema):  # TODO: needs work
+class RevisionSchema(Schema):
     comment = fields.String(required=True)
     submitter = fields.Nested(EditingUserSchema, required=True)
     editor = fields.Nested(EditingUserSchema, allow_none=True)
@@ -107,6 +108,7 @@ class CreateEditableSchema(Schema):
 
 
 class ReviewEditableSchema(Schema):
+    action = fields.String(required=True)
     revision = fields.Nested(RevisionSchema, unknown=EXCLUDE, required=True)
     endpoints = fields.Nested(EditableEndpointsSchema, required=True)
 

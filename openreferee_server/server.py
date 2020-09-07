@@ -229,7 +229,9 @@ def create_editable(event, contrib_id, editable_type, editable, revision, endpoi
 )
 @use_kwargs(ReviewEditableSchema(unknown=EXCLUDE), location="json")
 @require_event_token
-def review_editable(event, contrib_id, editable_type, revision_id, revision, endpoints):
+def review_editable(
+    event, contrib_id, editable_type, revision_id, action, revision, endpoints
+):
     """A new revision is created
     ---
     post:

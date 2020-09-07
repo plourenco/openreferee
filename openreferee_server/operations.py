@@ -142,6 +142,7 @@ def process_pdf(file, session, upload_endpoint):
 def process_revision(event, revision):
     publish = False
     session = setup_requests_session(event.token)
+    available_tags = get_event_tags(session, event)
     text = "This revision has been accepted but not published yet."
     if revision["comment"] == "publish":
         text = "This revision has been accepted for publishing."
@@ -150,5 +151,5 @@ def process_revision(event, revision):
         revision["external_create_comment_url"], json={"text": text, "internal": True},
     )
     return dict(
-        publish=publish, tags=["QA_APPROVED"] if publish else []
-    )  # TODO: tags by code or id?
+        publish=publish, tags=[available_tags["QA_APPROVED"]["id"]] if publish else []
+    )
