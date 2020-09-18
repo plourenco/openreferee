@@ -139,7 +139,7 @@ def process_pdf(file, session, upload_endpoint):
             return r.json()
 
 
-def process_revision(event, revision):
+def process_accepted_revision(event, revision):
     publish = False
     session = setup_requests_session(event.token)
     available_tags = get_event_tags(session, event)
@@ -153,3 +153,13 @@ def process_revision(event, revision):
     return dict(
         publish=publish, tags=[available_tags["QA_APPROVED"]["id"]] if publish else []
     )
+
+
+def process_revision(event, revision, action):
+    session = setup_requests_session(event.token)
+    available_tags = get_event_tags(session, event)
+    # TODO: return an internal comment via `comments=...`
+    # this should probably be the same structure we use when POSTing a comment,
+    # not just a string. e.g. this in this particular example:
+    # {"text": f"This revision has been reviewed ({action})", "internal": True}
+    return dict(tags=[available_tags["OK_TITLE"]["id"]])

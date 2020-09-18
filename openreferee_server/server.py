@@ -21,6 +21,7 @@ from .defaults import DEFAULT_EDITABLES, SERVICE_INFO
 from .models import Event
 from .operations import (
     cleanup_event,
+    process_accepted_revision,
     process_editable_files,
     process_revision,
     setup_event_tags,
@@ -258,9 +259,10 @@ def review_editable(
         "A new revision %r was submitted for contribution %r", revision_id, contrib_id
     )
     if revision["final_state"]["name"] == "accepted":
-        resp = process_revision(event, revision)
-        return jsonify(resp), 201
-    return "", 201
+        resp = process_accepted_revision(event, revision)
+    else:
+        resp = process_revision(event, revision, action)
+    return jsonify(resp), 201
 
 
 @api.cli.command("openapi")
