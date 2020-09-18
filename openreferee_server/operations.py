@@ -119,7 +119,7 @@ def process_editable_files(session, event, files, endpoints):
 
 def process_pdf(file, session, upload_endpoint):
     pdf_writer = PdfFileWriter()
-    resp = session.get(file["external_download_url"])
+    resp = session.get(file["signed_download_url"])
     resp.raise_for_status()
     pdf_reader = PdfFileReader(BytesIO(resp.content))
     with (Path(__file__).parent / "watermark.pdf").open("rb") as watermark_file:

@@ -53,7 +53,7 @@ class FileSchema(Schema):
     filename = fields.String(required=True)
     content_type = fields.String()
     # Only sent by unclaimed files, should be moved if this schema is re-used otherwise
-    external_download_url = fields.String(required=True)
+    signed_download_url = fields.String(required=True)
     file_type = fields.Integer(required=True)
 
 
