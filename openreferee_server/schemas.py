@@ -13,7 +13,9 @@ class EventEndpointsSchema(Schema):
     tags = fields.Nested(ListEndpointSchema)
     editable_types = fields.String(required=True)
     file_types = fields.Dict(
-        keys=fields.String(), values=fields.Nested(ListEndpointSchema), required=True,
+        keys=fields.String(),
+        values=fields.Nested(ListEndpointSchema),
+        required=True,
     )
 
 
@@ -31,7 +33,10 @@ class EventSchema(Schema):
     title = fields.String(required=True)
     url = fields.URL(schemes={"http", "https"}, required=True)
     token = fields.String(required=True)
-    endpoints = fields.Nested(EventEndpointsSchema, required=True,)
+    endpoints = fields.Nested(
+        EventEndpointsSchema,
+        required=True,
+    )
 
 
 class EventInfoServiceSchema(Schema):
@@ -44,7 +49,9 @@ class EventInfoSchema(Schema):
     url = fields.URL(schemes={"http", "https"}, required=True)
     can_disconnect = fields.Boolean(required=True, default=True)
     service = fields.Nested(
-        EventInfoServiceSchema, required=True, default=SERVICE_INFO,
+        EventInfoServiceSchema,
+        required=True,
+        default=SERVICE_INFO,
     )
 
 
@@ -98,7 +105,6 @@ class RevisionSchema(Schema):
     initial_state = fields.Nested(RevisionStateSchema)
     final_state = fields.Nested(RevisionStateSchema)
     tags = fields.List(fields.Nested(TagSchema))
-    external_create_comment_url = fields.String(required=True)
 
 
 class CreateEditableSchema(Schema):

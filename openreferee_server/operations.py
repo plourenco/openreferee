@@ -147,19 +147,19 @@ def process_accepted_revision(event, revision):
     if revision["comment"] == "publish":
         text = "This revision has been accepted for publishing."
         publish = True
-    session.post(
-        revision["external_create_comment_url"], json={"text": text, "internal": True},
-    )
     return dict(
-        publish=publish, tags=[available_tags["QA_APPROVED"]["id"]] if publish else []
+        publish=publish,
+        tags=[available_tags["QA_APPROVED"]["id"]] if publish else [],
+        comments=[dict(text=text, internal=True)],
     )
 
 
 def process_revision(event, revision, action):
     session = setup_requests_session(event.token)
     available_tags = get_event_tags(session, event)
-    # TODO: return an internal comment via `comments=...`
-    # this should probably be the same structure we use when POSTing a comment,
-    # not just a string. e.g. this in this particular example:
-    # {"text": f"This revision has been reviewed ({action})", "internal": True}
-    return dict(tags=[available_tags["OK_TITLE"]["id"]])
+    return dict(
+        tags=[available_tags["OK_TITLE"]["id"]],
+        comments=[
+            dict(text=f"This revision has been reviewed ({action}).", internal=True)
+        ],
+    )

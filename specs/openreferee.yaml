@@ -162,8 +162,6 @@ components:
           allOf:
           - $ref: '#/components/schemas/EditingUser'
           nullable: true
-        external_create_comment_url:
-          type: string
         files:
           items:
             $ref: '#/components/schemas/File'
@@ -180,7 +178,6 @@ components:
           type: array
       required:
       - comment
-      - external_create_comment_url
       - submitter
       type: object
     RevisionState:
