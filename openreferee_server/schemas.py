@@ -119,11 +119,16 @@ class ReviewEditableSchema(Schema):
     endpoints = fields.Nested(EditableEndpointsSchema, required=True)
 
 
+class CommentSchema(Schema):
+    text = fields.String()
+    internal = fields.Boolean()
+
+
 class ReviewResponseSchema(Schema):
     publish = fields.Boolean()
-    tags = fields.String()
+    tags = fields.List(fields.Integer())
     comment = fields.String()
-    comments = fields.List(fields.String())
+    comments = fields.List(fields.Nested(CommentSchema))
 
 
 class SuccessSchema(Schema):

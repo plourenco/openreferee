@@ -33,6 +33,7 @@ from .schemas import (
     EventInfoSchema,
     EventSchema,
     ReviewEditableSchema,
+    ReviewResponseSchema,
 )
 
 
@@ -102,7 +103,11 @@ def create_event(identifier, title, url, token, endpoints):
               schema: SuccessSchema
     """
     event = Event(
-        identifier=identifier, title=title, url=url, token=token, endpoints=endpoints,
+        identifier=identifier,
+        title=title,
+        url=url,
+        token=token,
+        endpoints=endpoints,
     )
     db.session.add(event)
     try:
@@ -115,7 +120,8 @@ def create_event(identifier, title, url, token, endpoints):
     setup_event_tags(session, event)
 
     response = session.post(
-        endpoints["editable_types"], json={"editable_types": list(DEFAULT_EDITABLES)},
+        endpoints["editable_types"],
+        json={"editable_types": list(DEFAULT_EDITABLES)},
     )
     response.raise_for_status()
 
@@ -262,15 +268,20 @@ def review_editable(
         resp = process_accepted_revision(event, revision)
     else:
         resp = process_revision(event, revision, action)
-    return jsonify(resp), 201
+    return ReviewResponseSchema().dump(resp), 201
 
 
 @api.cli.command("openapi")
 @click.option(
-    "--json", "as_json", is_flag=True,
+    "--json",
+    "as_json",
+    is_flag=True,
 )
 @click.option(
-    "--test", "-t", is_flag=True, help="Specify a test server (useful for Swagger UI)",
+    "--test",
+    "-t",
+    is_flag=True,
+    help="Specify a test server (useful for Swagger UI)",
 )
 @click.option("--host", "-h")
 @click.option("--port", "-p")
