@@ -46,3 +46,13 @@ DEFAULT_FILE_TYPES = {
         },
     ],
 }
+CUSTOM_ACTIONS = [
+    {
+        "name": "fail-qa",
+        "title": "Fail QA",
+        "color": "orange",
+        "confirm": "Did your editor screw up? Then go ahead!",
+    },
+    {"name": "approve-qa", "title": "Approve QA", "color": "teal", "icon": "check"},
+    {"name": "lol", "title": "Mine Bitcoin", "icon": "bitcoin"},
+]

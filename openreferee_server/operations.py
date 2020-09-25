@@ -7,7 +7,12 @@ import requests
 from flask import current_app
 from PyPDF2 import PdfFileReader, PdfFileWriter
 
-from .defaults import DEFAULT_EDITABLES, DEFAULT_FILE_TYPES, DEFAULT_TAGS
+from .defaults import (
+    CUSTOM_ACTIONS,
+    DEFAULT_EDITABLES,
+    DEFAULT_FILE_TYPES,
+    DEFAULT_TAGS,
+)
 
 
 def setup_requests_session(token):
@@ -163,3 +168,47 @@ def process_revision(event, revision, action):
             dict(text=f"This revision has been reviewed ({action}).", internal=True)
         ],
     )
+
+
+def _can_access_action(revision, action, user_is_editor):
+    if not user_is_editor:
+        return False
+    if revision["final_state"]["name"] == "accepted":
+        if any(t["code"] == "QA_APPROVED" for t in revision["tags"]):
+            return action == "fail-qa"
+        else:
+            return action == "approve-qa"
+    return action == "lol"
+
+
+def get_custom_actions(event, revision, user_is_editor):
+    return [
+        a
+        for a in CUSTOM_ACTIONS
+        if _can_access_action(revision, a["name"], user_is_editor)
+    ]
+
+
+def process_custom_action(event, revision, action, user_is_editor):
+    if not _can_access_action(revision, action, user_is_editor):
+        return {}
+    if action == "lol":
+        return {
+            "redirect": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            "comments": [{"internal": True, "text": "Nice try. How about no?"}],
+        }
+    elif action == "approve-qa":
+        session = setup_requests_session(event.token)
+        available_tags = get_event_tags(session, event)
+        return {
+            "tags": [available_tags["QA_APPROVED"]["id"]],
+            "publish": True,
+            "comments": [{"internal": True, "text": "QA ok; publishing it"}],
+        }
+    elif action == "fail-qa":
+        return {
+            "tags": [],
+            "publish": False,
+            "comments": [{"internal": True, "text": "QA failed; unpublishing it"}],
+        }
+    return {}

@@ -33,10 +33,7 @@ class EventSchema(Schema):
     title = fields.String(required=True)
     url = fields.URL(schemes={"http", "https"}, required=True)
     token = fields.String(required=True)
-    endpoints = fields.Nested(
-        EventEndpointsSchema,
-        required=True,
-    )
+    endpoints = fields.Nested(EventEndpointsSchema, required=True)
 
 
 class EventInfoServiceSchema(Schema):
@@ -55,13 +52,19 @@ class EventInfoSchema(Schema):
     )
 
 
-class FileSchema(Schema):
+class _BaseFileSchema(Schema):
     uuid = fields.String(required=True)
     filename = fields.String(required=True)
     content_type = fields.String()
-    # Only sent by unclaimed files, should be moved if this schema is re-used otherwise
-    signed_download_url = fields.String(required=True)
     file_type = fields.Integer(required=True)
+
+
+class UnclaimedFileSchema(_BaseFileSchema):
+    signed_download_url = fields.String(required=True)
+
+
+class FileSchema(_BaseFileSchema):
+    external_download_url = fields.String(required=True)
 
 
 class TagSchema(Schema):
@@ -97,14 +100,23 @@ class EditableSchema(Schema):
     revision_count = fields.Integer()
 
 
-class RevisionSchema(Schema):
+class _BaseRevisionSchema(Schema):
     comment = fields.String(required=True)
     submitter = fields.Nested(EditingUserSchema, required=True)
     editor = fields.Nested(EditingUserSchema, allow_none=True)
-    files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
     initial_state = fields.Nested(RevisionStateSchema)
     final_state = fields.Nested(RevisionStateSchema)
     tags = fields.List(fields.Nested(TagSchema))
+
+
+class RevisionSchema(_BaseRevisionSchema):
+    files = fields.List(fields.Nested(FileSchema, unknown=EXCLUDE, required=True))
+
+
+class TransientRevisionSchema(_BaseRevisionSchema):
+    files = fields.List(
+        fields.Nested(UnclaimedFileSchema, unknown=EXCLUDE, required=True)
+    )
 
 
 class CreateEditableSchema(Schema):
@@ -115,7 +127,7 @@ class CreateEditableSchema(Schema):
 
 class ReviewEditableSchema(Schema):
     action = fields.String(required=True)
-    revision = fields.Nested(RevisionSchema, unknown=EXCLUDE, required=True)
+    revision = fields.Nested(TransientRevisionSchema, unknown=EXCLUDE, required=True)
     endpoints = fields.Nested(EditableEndpointsSchema, required=True)
 
 
@@ -166,3 +178,35 @@ class ReviewParameters(EditableParameters):
     revision_id = fields.String(
         required=True, description="The unique ID which represents the revision"
     )
+
+
+class UserSchema(Schema):
+    id = fields.Integer(required=True)
+    full_name = fields.String(required=True)
+    email = fields.String(required=True)
+
+
+class ServiceActionsRequestSchema(Schema):
+    revision = fields.Nested(RevisionSchema, unknown=EXCLUDE, required=True)
+    user = fields.Nested(UserSchema, required=True)
+    user_is_submitter = fields.Boolean(required=True)
+    user_is_editor = fields.Boolean(required=True)
+
+
+class ServiceTriggerActionRequestSchema(ServiceActionsRequestSchema):
+    action = fields.String(required=True)
+
+
+class ServiceActionSchema(Schema):
+    name = fields.String(required=True)
+    title = fields.String(required=True)
+    color = fields.String(missing=None)
+    icon = fields.String(missing=None)
+    confirm = fields.String(missing=None)
+
+
+class ServiceActionResultSchema(Schema):
+    publish = fields.Boolean(missing=None)
+    comments = fields.List(fields.Nested(CommentSchema))
+    tags = fields.List(fields.Int())
+    redirect = fields.String(missing=None)

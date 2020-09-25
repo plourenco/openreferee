@@ -21,7 +21,9 @@ from .defaults import DEFAULT_EDITABLES, SERVICE_INFO
 from .models import Event
 from .operations import (
     cleanup_event,
+    get_custom_actions,
     process_accepted_revision,
+    process_custom_action,
     process_editable_files,
     process_revision,
     setup_event_tags,
@@ -34,6 +36,10 @@ from .schemas import (
     EventSchema,
     ReviewEditableSchema,
     ReviewResponseSchema,
+    ServiceActionResultSchema,
+    ServiceActionSchema,
+    ServiceActionsRequestSchema,
+    ServiceTriggerActionRequestSchema,
 )
 
 
@@ -269,6 +275,100 @@ def review_editable(
     else:
         resp = process_revision(event, revision, action)
     return ReviewResponseSchema().dump(resp), 201
+
+
+@api.route(
+    "/event/<identifier>/editable/<any(paper,slides,poster):editable_type>/<contrib_id>/<revision_id>/actions",
+    methods=("POST",),
+)
+@use_kwargs(ServiceActionsRequestSchema(unknown=EXCLUDE), location="json")
+@require_event_token
+def get_custom_revision_actions(
+    event,
+    contrib_id,
+    editable_type,
+    revision_id,
+    revision,
+    user,
+    user_is_editor,
+    user_is_submitter,
+):
+    """Get custom actions for a revision
+    ---
+    post:
+      description: Called when the timeline is accessed by an editor or submitter
+      operationId: getCustomRevisionActions
+      tags: ["editable", "review"]
+      security:
+        - bearer_token: []
+      requestBody:
+        content:
+          application/json:
+            schema: ServiceActionsRequestSchema
+      parameters:
+        - in: path
+          schema: ReviewParameters
+      responses:
+        200:
+          description: List of available actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: ServiceActionSchema
+    """
+
+    return jsonify(
+        ServiceActionSchema(many=True).dump(
+            get_custom_actions(event, revision, user_is_editor)
+        )
+    )
+
+
+@api.route(
+    "/event/<identifier>/editable/<any(paper,slides,poster):editable_type>/<contrib_id>/<revision_id>/action",
+    methods=("POST",),
+)
+@use_kwargs(ServiceTriggerActionRequestSchema(unknown=EXCLUDE), location="json")
+@require_event_token
+def custom_revision_action(
+    event,
+    contrib_id,
+    editable_type,
+    revision_id,
+    revision,
+    user,
+    user_is_editor,
+    user_is_submitter,
+    action,
+):
+    """Trigger a custom action for a revision
+    ---
+    post:
+      description: Called when a user clicks a custom action button
+      operationId: triggerCustomRevisionAction
+      tags: ["editable", "review"]
+      security:
+        - bearer_token: []
+      requestBody:
+        content:
+          application/json:
+            schema: ServiceTriggerActionRequestSchema
+      parameters:
+        - in: path
+          schema: ReviewParameters
+      responses:
+        200:
+          description: List of available actions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: ServiceActionResultSchema
+    """
+
+    resp = process_custom_action(event, revision, action, user_is_editor)
+    return jsonify(ServiceActionResultSchema().dump(resp))
 
 
 @api.cli.command("openapi")
