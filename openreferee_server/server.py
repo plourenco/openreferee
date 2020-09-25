@@ -394,6 +394,9 @@ def _openapi(test, as_json, host, port):
         spec.path(view=remove_event)
         spec.path(view=get_event_info)
         spec.path(view=create_editable)
+        spec.path(view=review_editable)
+        spec.path(view=get_custom_revision_actions)
+        spec.path(view=custom_revision_action)
 
         if as_json:
             print(json.dumps(spec.to_dict()))
