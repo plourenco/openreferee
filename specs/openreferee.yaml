@@ -27,10 +27,8 @@ components:
           - $ref: '#/components/schemas/EditingUser'
           nullable: true
         id:
-          format: int32
           type: integer
         revision_count:
-          format: int32
           type: integer
         state:
           type: string
@@ -58,7 +56,6 @@ components:
         full_name:
           type: string
         id:
-          format: int32
           type: integer
         identifier:
           type: string
@@ -122,25 +119,6 @@ components:
         version:
           type: string
       type: object
-    File:
-      properties:
-        content_type:
-          type: string
-        file_type:
-          format: int32
-          type: integer
-        filename:
-          type: string
-        signed_download_url:
-          type: string
-        uuid:
-          type: string
-      required:
-      - file_type
-      - filename
-      - signed_download_url
-      - uuid
-      type: object
     Generated:
       properties:
         details:
@@ -186,7 +164,6 @@ components:
           type: boolean
         tags:
           items:
-            format: int32
             type: integer
           type: array
       type: object
@@ -200,7 +177,7 @@ components:
           nullable: true
         files:
           items:
-            $ref: '#/components/schemas/File'
+            $ref: '#/components/schemas/SignedFile'
           type: array
         final_state:
           $ref: '#/components/schemas/RevisionState'
@@ -267,7 +244,6 @@ components:
           type: string
         tags:
           items:
-            format: int32
             type: integer
           type: array
       type: object
@@ -316,6 +292,24 @@ components:
       - user_is_editor
       - user_is_submitter
       type: object
+    SignedFile:
+      properties:
+        content_type:
+          type: string
+        file_type:
+          type: integer
+        filename:
+          type: string
+        signed_download_url:
+          type: string
+        uuid:
+          type: string
+      required:
+      - file_type
+      - filename
+      - signed_download_url
+      - uuid
+      type: object
     Success:
       properties:
         success:
@@ -330,7 +324,6 @@ components:
         color:
           type: string
         id:
-          format: int32
           type: integer
         is_used_in_revision:
           type: boolean
@@ -357,7 +350,7 @@ components:
           nullable: true
         files:
           items:
-            $ref: '#/components/schemas/UnclaimedFile'
+            $ref: '#/components/schemas/SignedFile'
           type: array
         final_state:
           $ref: '#/components/schemas/RevisionState'
@@ -373,25 +366,6 @@ components:
       - comment
       - submitter
       type: object
-    UnclaimedFile:
-      properties:
-        content_type:
-          type: string
-        file_type:
-          format: int32
-          type: integer
-        filename:
-          type: string
-        signed_download_url:
-          type: string
-        uuid:
-          type: string
-      required:
-      - file_type
-      - filename
-      - signed_download_url
-      - uuid
-      type: object
     User:
       properties:
         email:
@@ -399,7 +373,6 @@ components:
         full_name:
           type: string
         id:
-          format: int32
           type: integer
       required:
       - email
@@ -519,7 +492,6 @@ paths:
         name: contrib_id
         required: true
         schema:
-          format: int32
           type: integer
       - description: The name which represents the editable type
         in: path
@@ -556,7 +528,6 @@ paths:
         name: contrib_id
         required: true
         schema:
-          format: int32
           type: integer
       - description: The name which represents the editable type
         in: path
@@ -603,7 +574,6 @@ paths:
         name: contrib_id
         required: true
         schema:
-          format: int32
           type: integer
       - description: The name which represents the editable type
         in: path
@@ -652,7 +622,6 @@ paths:
         name: contrib_id
         required: true
         schema:
-          format: int32
           type: integer
       - description: The name which represents the editable type
         in: path
