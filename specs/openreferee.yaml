@@ -126,19 +126,19 @@ components:
       properties:
         content_type:
           type: string
-        external_download_url:
-          type: string
         file_type:
           format: int32
           type: integer
         filename:
           type: string
+        signed_download_url:
+          type: string
         uuid:
           type: string
       required:
-      - external_download_url
       - file_type
       - filename
+      - signed_download_url
       - uuid
       type: object
     Generated:
