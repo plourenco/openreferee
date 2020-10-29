@@ -22,8 +22,8 @@ class EventEndpointsSchema(Schema):
 class EditableEndpointsSchema(Schema):
     revisions = fields.Nested(
         {
-            "details": fields.String(required=True),
-            "replace": fields.String(required=True),
+            'details': fields.String(required=True),
+            'replace': fields.String(required=True),
         }
     )
     file_upload = fields.String(required=True)
@@ -31,7 +31,7 @@ class EditableEndpointsSchema(Schema):
 
 class EventSchema(Schema):
     title = fields.String(required=True)
-    url = fields.URL(schemes={"http", "https"}, required=True)
+    url = fields.URL(schemes={'http', 'https'}, required=True)
     token = fields.String(required=True)
     endpoints = fields.Nested(EventEndpointsSchema, required=True)
 
@@ -43,7 +43,7 @@ class EventInfoServiceSchema(Schema):
 
 class EventInfoSchema(Schema):
     title = fields.String(required=True)
-    url = fields.URL(schemes={"http", "https"}, required=True)
+    url = fields.URL(schemes={'http', 'https'}, required=True)
     can_disconnect = fields.Boolean(required=True, default=True)
     service = fields.Nested(
         EventInfoServiceSchema,
@@ -113,7 +113,7 @@ class TransientRevisionSchema(_BaseRevisionSchema):
 class RoleSchema(Schema):
     name = fields.String()
     code = fields.String()
-    source = fields.String(validate=validate.OneOf(["event", "category"]))
+    source = fields.String(validate=validate.OneOf(['event', 'category']))
 
 
 class UserSchema(Schema):
@@ -163,7 +163,7 @@ class ServiceInfoSchema(Schema):
 
 class IdentifierParameter(Schema):
     identifier = fields.String(
-        required=True, description="The unique ID which represents the event"
+        required=True, description='The unique ID which represents the event'
     )
 
 
@@ -173,19 +173,19 @@ class EditableParameters(Schema):
         ordered = True
 
     identifier = fields.String(
-        required=True, description="The unique ID which represents the event"
+        required=True, description='The unique ID which represents the event'
     )
     contrib_id = fields.Integer(
-        required=True, description="The unique ID which represents the contribution"
+        required=True, description='The unique ID which represents the contribution'
     )
     editable_type = fields.String(
-        required=True, description="The name which represents the editable type"
+        required=True, description='The name which represents the editable type'
     )
 
 
 class ReviewParameters(EditableParameters):
     revision_id = fields.String(
-        required=True, description="The unique ID which represents the revision"
+        required=True, description='The unique ID which represents the revision'
     )
 
 
