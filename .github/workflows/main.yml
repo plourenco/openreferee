@@ -7,9 +7,8 @@ on:
     branches: [master]
 
 jobs:
-  diff-openapi-spec:
+  lint:
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out PR branch
         uses: actions/checkout@v2
@@ -24,6 +23,16 @@ jobs:
         run: |
           pip install -e '.[dev]'
           npm ci
+
+      - name: Check import sorting
+        run: isort -rc --diff --check-only openreferee_server/
+
+      - name: Run flake8
+        if: success() || failure()
+        run: |
+          echo "::add-matcher::.github/matchers/flake8-problem-matcher.json"
+          flake8 --format '%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
+          echo "::remove-matcher owner=flake8::"
 
       - name: Generate OpenAPI spec from the application
         run: |
